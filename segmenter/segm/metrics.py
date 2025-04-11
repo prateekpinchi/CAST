@@ -98,6 +98,7 @@ def compute_metrics(
         for k in keys:
             list_seg_pred.append(np.asarray(seg_pred[k]))
             list_seg_gt.append(np.asarray(seg_gt[k]))
+        import pdb; pdb.set_trace()
         ret_metrics = mean_iou(
             results=list_seg_pred,
             gt_seg_maps=list_seg_gt,
@@ -113,6 +114,7 @@ def compute_metrics(
             dtype=float,
             device=ptu.device,
         )
+        import pdb; pdb.set_trace()
         cat_iou = ret_metrics[2]
     # broadcast metrics from 0 to all nodes
     if distributed:
