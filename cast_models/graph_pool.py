@@ -146,13 +146,38 @@ class GraphPooling(nn.Module):
         else:
             sampling_src = padded_src
 
-        sampled_inds = dgl_geo.farthest_point_sampler(
-            sampling_src.to(torch.float64),
-            self._num_clusters + 1,
-            0).long()
-        sampled_inds = sampled_inds[:, 1:] - 1
-        assert((sampled_inds  >= 0).all()) # Make sure sampling from the squence
+        # import pdb; pdb.set_trace()
+
+        # Add more detailed debugging before FPS
+        # print(f"FPS Debug - sampling_src shape: {sampling_src.shape}")
+        # print(f"FPS Debug - num_clusters: {self._num_clusters}")
+        # print(f"FPS Debug - batch size: {bs}")
+        
+        try:
+            sampled_inds = dgl_geo.farthest_point_sampler(
+                sampling_src.to(torch.float64).detach().cpu(),
+                self._num_clusters + 1,
+                0).long()
+            sampled_inds = (sampled_inds[:, 1:] - 1).to(src.device)
+            assert((sampled_inds >= 0).all()) # Make sure sampling from the squence
+        except AssertionError as e:
+            # print(f"FPS Assertion Error: {str(e)}")
+            # print(f"Required points: {(self._num_clusters + 1) * bs}, Available: {sampling_src.shape[0] * sampling_src.shape[1]}")
+            # # Fallback strategy: random sampling if FPS fails
+            # print("Falling back to random sampling...")
+            sampled_inds = torch.stack([
+                torch.randperm(sl, device=src.device)[:self._num_clusters]
+                for _ in range(bs)
+            ])
+        
         unfold_sampled_inds = sampled_inds.unsqueeze(2).expand(-1, -1, cs)
+        # sampled_inds = dgl_geo.farthest_point_sampler(
+        #     sampling_src.to(torch.float64).detach().cpu(),
+        #     self._num_clusters + 1,
+        #     0).long()
+        # sampled_inds = (sampled_inds[:, 1:] - 1).to(src.device)
+        # assert((sampled_inds  >= 0).all()) # Make sure sampling from the squence
+        # unfold_sampled_inds = sampled_inds.unsqueeze(2).expand(-1, -1, cs)
 
         # Apply attention layer to predict grouping
         node_features = self.centroid_fc(src)

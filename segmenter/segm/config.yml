@@ -136,6 +136,15 @@ dataset:
     crop_size: 512
     window_size: 512
     window_stride: 512
+  pannuke:
+    epochs: 64
+    eval_freq: 2
+    batch_size: 16
+    learning_rate: 0.001
+    im_size: 256
+    crop_size: 224
+    window_size: 224
+    window_stride: 224
   pascal_context:
     epochs: 256
     eval_freq: 8

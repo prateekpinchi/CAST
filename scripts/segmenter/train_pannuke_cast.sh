@@ -1,6 +1,6 @@
 #/usr/bin/bash
 
-SNAPSHOTS=snapshots/segmenter/ade20k/cast_small
+SNAPSHOTS=snapshots/segmenter/pannuke/cast_small
 
 export PYTHONPATH=$(pwd)/segmenter/:$PYTHONPATH
 export DATASET=$(pwd)/data/
@@ -8,7 +8,7 @@ export DATASET=$(pwd)/data/
 python -m segm.train_cast \
   --log-dir ${SNAPSHOTS} \
   --pretrained snapshots/deit/imagenet1k/cast_small/best_checkpoint.pth \
-  --dataset ade20k \
+  --dataset pannuke \
   --backbone deit_cast_small \
   --decoder mask_transformer
 

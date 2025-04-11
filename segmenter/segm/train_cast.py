@@ -70,6 +70,7 @@ def main(
     amp,
     resume,
 ):
+    # import pdb; pdb.set_trace()
     # start distributed mode
     ptu.set_gpu_mode(True)
     distributed.init_process()
@@ -166,7 +167,6 @@ def main(
 
     # dataset
     dataset_kwargs = variant["dataset_kwargs"]
-
     train_loader = create_dataset(dataset_kwargs)
     val_kwargs = dataset_kwargs.copy()
     val_kwargs["split"] = "val"
@@ -209,6 +209,7 @@ def main(
         lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         variant["algorithm_kwargs"]["start_epoch"] = checkpoint["epoch"] + 1
     else:
+        # import pdb; pdb.set_trace()
         sync_model(log_dir, model)
 
     if ptu.distributed:
@@ -238,6 +239,8 @@ def main(
     print(f"Val dataset length: {len(val_loader.dataset)}")
     print(f"Encoder parameters: {num_params(model_without_ddp.encoder)}")
     print(f"Decoder parameters: {num_params(model_without_ddp.decoder)}")
+
+    # import pdb; pdb.set_trace()
 
     for epoch in range(start_epoch, num_epochs):
         # train for one epoch

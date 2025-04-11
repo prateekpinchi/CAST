@@ -30,6 +30,29 @@ def train_one_epoch(
         superpix = batch["superpix"].to(ptu.device)
         seg_gt = batch["segmentation"].long().to(ptu.device)
 
+        # debug code
+        # num_superpix = len(torch.unique(superpix))
+        # print(f'Batch shape: {im.shape}, superpix shape: {superpix.shape}, num_superpix: {num_superpix}')
+
+        if seg_gt.dim() == 4 and seg_gt.shape[-1] == 3:
+            b, h, w, _ = seg_gt.shape
+            seg_class = torch.zeros((b, h, w), dtype=torch.long, device=seg_gt.device)
+            color_map = {
+                (255, 255, 255): 0,    # background
+                (255, 0, 0): 1,        # class 1: neoplastic
+                (255, 165, 0): 2,      # class 2: inflammatory
+                (0, 255, 0): 3,        # class 3: connective
+                (139, 69, 19): 4,      # class 4: dead
+                (0, 0, 255): 5         # class 5: epithelial
+            }
+
+            for rgb, cls_idx in color_map.items():
+                r, g, b = rgb
+                mask = (seg_gt[:, :, :, 0] == r) & (seg_gt[:, :, :, 1] == g) & (seg_gt[:, :, :, 2] == b)
+                seg_class[mask] = cls_idx
+
+            seg_gt = seg_class
+
         with amp_autocast():
             seg_pred = model.forward(im, superpix)
             loss = criterion(seg_pred, seg_gt)
@@ -105,6 +128,7 @@ def evaluate(
         val_seg_pred[filename] = seg_pred
 
     val_seg_pred = gather_data(val_seg_pred)
+    import pdb; pdb.set_trace()
     scores = compute_metrics(
         val_seg_pred,
         val_seg_gt,
